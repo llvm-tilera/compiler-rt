@@ -1,0 +1,58 @@
+//===-- Makefile.tilera - Stand-alone comiler-rt for Tile64 -----**- make -===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License and the MIT License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+//
+//                        Compiler-rt for Tile64 Backend
+//
+// Author: David Juhasz
+// E-mail: juhda@caesar.elte.hu
+// Institute: Dept. of Programming Languages and Compilers, ELTE IK, Hungary
+//
+// The research is supported by the European Union and co-financed by the
+// European Social Fund (grant agreement no. TAMOP
+// 4.2.1./B-09/1/KMR-2010-0003).
+//
+//
+// For details, please consult the README.txt file.
+//
+//===----------------------------------------------------------------------===//
+
+
+CC=tile-cc
+
+EXCLUDED = atomic divdc3 divsc3 divxc3 muldc3 mulsc3 mulxc3 floatdidf floatundidf gcc_personality_v0
+
+SOURCEDIR=lib
+EXCLUDEDSOURCES=$(foreach file,$(EXCLUDED),$(SOURCEDIR)/$(file).c)
+SOURCES=$(filter-out $(EXCLUDEDSOURCES),$(wildcard $(SOURCEDIR)/*.c))
+
+BASEDIR=tilera
+
+STATICDIR=$(BASEDIR)/static
+DYNAMICDIR=$(BASEDIR)/dynamic
+
+STATICOBJS=$(SOURCES:$(SOURCEDIR)/%.c=$(STATICDIR)/%.o)
+DYNAMICOBJS=$(SOURCES:$(SOURCEDIR)/%.c=$(DYNAMICDIR)/%.o)
+
+LIBDIR=$(BASEDIR)/lib
+
+all: $(STATICOBJS) $(DYNAMICOBJS)
+	ar rs $(LIBDIR)/libcompiler-rt.a $(STATICOBJS)
+	$(CC) -shared -Wl,-soname,libcompiler-rt.so -o $(LIBDIR)/libcompiler-rt.so $(DYNAMICOBJS)
+
+$(STATICDIR)/%.o: $(SOURCEDIR)/%.c
+	$(CC) -c -o $@ $^
+
+$(DYNAMICDIR)/%.o: $(SOURCEDIR)/%.c
+	$(CC) -c -fpic -o $@ $^
+
+clean:
+	rm -f $(LIBDIR)/*
+	rm -f $(STATICDIR)/*
+	rm -f $(DYNAMICDIR)/*
+

@@ -7,7 +7,49 @@ support routines.
 Compiler-RT is open source software. You may freely distribute it under the
 terms of the license agreement found in LICENSE.txt.
 
-================================
+==================================
+
+NOTES FOR THE STANDALONE COMPILER-RT LIBRARY
+
+==================================
+
+The standalone version of Compiler-RT is meant to be used with Tile64 backend
+of LLVM.  As the architecture doesn't support floating point operations and
+integer division natevily, any LLVM-generated Tile64 assembly program utilizing
+such a feature must be provided with this library in order to compile and, in
+case of compiling with the shared library, to run.
+
+The library is suggested to be compiled using the supported Makefile
+(Makefile.tilera), which uses tile-cc to create the library. So compile as
+follows:
+
+  make -f Makefile.tilera
+
+Because of the intended use of this library, only sources suitable for Tile
+architecture are compiled into the library. All functions related to complex
+numbers are skipped, as tile-cc doesn't support complex arithmetic at the
+moment. These functions are the followings:
+ * divdc3
+ * divsc3
+ * divxc3
+ * muldc3
+ * mulsc3
+ * mulxc3
+
+Other functions are ignored because of incompatibility with tile-cc:
+ * atomic
+ * __floatdidf
+ * __floatundidf
+ * __gcc_personality_v0
+
+As for the last three functions, despite the functions are not present in the
+compiled library, in case the generated program is referring to them, the
+references can be solved by tile-cc using its own libgcc.
+
+
+==================================
+= Continue original file content =
+==================================
 
 This is a replacement library for libgcc.  Each function is contained
 in its own file.  Each function has a corresponding unit test under
